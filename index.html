@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Database Criteria Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, #00684a, #00ed64);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        header img {
+            height: 40px;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        header p {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.85rem;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-message {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .user-message {
+            background: #00684a;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .option-btn {
+            background: #0f3460;
+            border: 1px solid #1a5276;
+            color: #e0e0e0;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: #1a5276;
+            border-color: #00ed64;
+            color: #00ed64;
+        }
+
+        .option-btn.selected {
+            background: #00684a;
+            border-color: #00ed64;
+            color: #fff;
+        }
+
+        .multi-select-hint {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #00684a, #00ed64);
+            border: none;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 8px;
+            transition: all 0.2s;
+            align-self: flex-start;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0, 237, 100, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Score card */
+        .scorecard {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 10px;
+            align-self: flex-start;
+            max-width: 90%;
+        }
+
+        .score-header {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .score-bar-container {
+            background: #0a0a1a;
+            border-radius: 12px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .score-bar {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 1.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .score-strong { background: linear-gradient(90deg, #00684a, #00ed64); }
+        .score-good { background: linear-gradient(90deg, #00684a, #5bc0be); }
+        .score-equal { background: linear-gradient(90deg, #e77f24, #f0c929); }
+        .score-weak { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+
+        .score-tier {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 12px 0 8px;
+        }
+
+        .score-tier.strong { color: #00ed64; }
+        .score-tier.good { color: #5bc0be; }
+        .score-tier.equal { color: #f0c929; }
+        .score-tier.weak { color: #e74c3c; }
+
+        .score-breakdown {
+            margin-top: 16px;
+            border-top: 1px solid #0f3460;
+            padding-top: 16px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #0a0a1a;
+        }
+
+        .breakdown-label { color: #aaa; }
+        .breakdown-score { font-weight: 600; }
+        .breakdown-score.positive { color: #00ed64; }
+        .breakdown-score.neutral { color: #f0c929; }
+        .breakdown-score.negative { color: #e74c3c; }
+
+        .restart-btn {
+            background: #0f3460;
+            border: 1px solid #1a5276;
+            color: #e0e0e0;
+            padding: 10px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 16px;
+            transition: all 0.2s;
+        }
+
+        .restart-btn:hover {
+            background: #1a5276;
+            border-color: #00ed64;
+        }
+
+        .score-detail {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>MongoDB Database Criteria Bot</h1>
+            <p>Evaluate if MongoDB is the right fit for your project</p>
+        </div>
+    </header>
+    <div class="chat-container" id="chat"></div>
+
+    <script>
+    const QUESTIONS = {
+        q1: {
+            id: 'q1',
+            text: "Let's start! What type of project is this?",
+            type: 'single',
+            options: [
+                { id: 'new_no_legacy', label: 'New service — no legacy dependencies', score: 8, next: 'q2' },
+                { id: 'new_api_legacy', label: 'New service — integrates with legacy via APIs', score: 7.5, next: 'q2' },
+                { id: 'new_shield', label: 'New top-level service to shield legacy from heavy reads/writes', score: 8, next: 'q2' },
+                { id: 'new_shared_db', label: 'New service — directly shares data/DB with legacy systems', score: 5, next: 'q2' },
+                { id: 'refresh', label: 'Replacement / refresh of existing service', score: 5, next: 'q1b' }
+            ],
+            weight: 1.0,
+            category: 'Project Type'
+        },
+        q1b: {
+            id: 'q1b',
+            text: "What's driving the refresh? (Select all that apply)",
+            type: 'multi',
+            options: [
+                { id: 'rigid_schema', label: 'Rigid schema changes slowing development', score: 1.5 },
+                { id: 'db_bottleneck', label: 'Database bottlenecks delaying delivery', score: 1.5 },
+                { id: 'always_on', label: 'Need for near always-on availability', score: 1.2 },
+                { id: 'faster_change', label: 'Faster reaction to regulations or market changes', score: 1.2 },
+                { id: 'no_flatten', label: 'Storing semi-structured data (XML/JSON) without flattening', score: 1.5 }
+            ],
+            weight: 1.0,
+            category: 'Refresh Drivers',
+            next: 'q2',
+            isBooster: true,
+            boosterBase: 'q1'
+        },
+        q2: {
+            id: 'q2',
+            text: "What is the key business value of this service? (Select all that apply)",
+            type: 'multi',
+            options: [
+                { id: 'digital_ux', label: 'Better UI / digital experience for end customers', score: 1.2 },
+                { id: 'fast_response', label: 'Faster response times / low latency', score: 1.0 },
+                { id: 'decouple_logic', label: 'Decoupling business logic from database', score: 1.0 },
+                { id: 'api_microservices', label: 'API-first / microservices architecture', score: 1.0 },
+                { id: 'geo_distributed', label: 'Geo-distributed / multi-region availability', score: 1.0 },
+                { id: 'heavy_transactions', label: 'Heavy multi-table transactional workflows', score: -1.0 },
+                { id: 'relational_audit', label: 'Regulatory requirement for strict relational audit trails', score: -0.5 }
+            ],
+            weight: 1.0,
+            category: 'Business Value',
+            next: 'q3_router'
+        },
+        q3_router: {
+            id: 'q3_router',
+            type: 'router',
+            route: function(answers) {
+                const q1Answer = answers['q1'];
+                if (q1Answer && q1Answer[0] === 'refresh') return 'q3b';
+                return 'q3';
+            }
+        },
+        q3: {
+            id: 'q3',
+            text: "For your new service — what are the key business requirements? (Select all that apply)",
+            type: 'multi',
+            options: [
+                { id: 'ddd', label: 'Domain-driven design / architecture', score: 1.5 },
+                { id: 'realtime', label: 'Real-time updates and information delivery', score: 1.2 },
+                { id: 'operational_layer', label: 'Operational data layer for fast responses over cramped backend services', score: 1.5 },
+                { id: 'agentic_ai', label: 'Agentic AI experience with short/long-term memory and vector stores', score: 1.5 },
+                { id: 'polymorphic_store', label: 'Polymorphic data — storing varied information types in a single store', score: 1.2 }
+            ],
+            weight: 1.0,
+            category: 'Business Requirements (New)',
+            next: 'q4'
+        },
+        q3b: {
+            id: 'q3b',
+            text: "What is the target state architecture for the refresh? (Select all that apply)",
+            type: 'multi',
+            options: [
+                { id: 'monolith_to_ddd', label: 'Moving from monolith to domain-driven / microservices architecture', score: 1.5 },
+                { id: 'add_realtime', label: 'Adding real-time capabilities that legacy system can\'t support', score: 1.2 },
+                { id: 'offload_layer', label: 'Building an operational data layer to offload legacy backends', score: 1.5 },
+                { id: 'integrate_ai', label: 'Integrating AI / agentic capabilities into existing workflows', score: 1.5 },
+                { id: 'consolidate_stores', label: 'Consolidating multiple data stores into a single polymorphic store', score: 1.2 },
+                { id: 'eliminate_migrations', label: 'Eliminating schema migration bottlenecks that slow releases', score: 1.2 },
+                { id: 'lift_shift', label: 'Migrating relational workload as-is to a new platform (lift and shift)', score: -1.5 },
+                { id: 'keep_stored_procs', label: 'Keeping existing stored procedures / DB-side business logic', score: -1.5 }
+            ],
+            weight: 1.0,
+            category: 'Target Architecture (Refresh)',
+            next: 'q4'
+        },
+        q4: {
+            id: 'q4',
+            text: "Let's look at your data and domain characteristics. (Select all that apply)",
+            type: 'multi',
+            options: [
+                { id: 'regulatory_changes', label: 'Frequent regulatory changes requiring rapid service adaptation', score: 1.2 },
+                { id: 'status_tracking', label: 'Various entity status changes tracked frequently', score: 1.0 },
+                { id: 'temporal_data', label: 'Temporal data stored (time-bound, versioned, effective-dated)', score: 1.0 },
+                { id: 'few_tables_low_card', label: 'Entity data fits few tables, low cardinality — natural single document', score: 1.5 },
+                { id: 'runtime_aggregations', label: 'Heavy runtime computations / aggregations on operational data', score: 1.2 },
+                { id: 'analytics_primary', label: 'Primary purpose is analytics / BI for internal analysts and data teams', score: -2.0 }
+            ],
+            weight: 1.0,
+            category: 'Data & Domain Characteristics',
+            next: 'q5'
+        },
+        q5: {
+            id: 'q5',
+            text: "How about developer velocity and operational needs?",
+            type: 'multi',
+            options: [
+                { id: 'reduce_devops', label: 'Constant ask from developers to reduce dependency on DevOps / DBA teams for data operations', score: 1.5 },
+                { id: 'move_faster', label: 'Business asks to move faster even when you\'re already moving fast', score: 1.2 }
+            ],
+            weight: 1.0,
+            category: 'Developer Velocity',
+            next: 'q6'
+        },
+        q6: {
+            id: 'q6',
+            text: "Does your application need any of these additional capabilities alongside operational data? (Select all that apply)",
+            type: 'multi',
+            options: [
+                { id: 'text_search', label: 'Natural language / full-text search alongside operational data', score: 1.2 },
+                { id: 'vector_search', label: 'Vector search (embeddings, similarity) alongside operational data', score: 1.5 },
+                { id: 'event_streaming', label: 'Event streaming / change-driven reactions alongside operational data', score: 1.0 },
+                { id: 'multiple_above', label: 'Need 2+ of the above on a single platform (consolidation play)', score: 1.5 }
+            ],
+            weight: 1.0,
+            category: 'Platform Consolidation',
+            next: 'done'
+        }
+    };
+
+    // State
+    let answers = {};
+    let categoryScores = {};
+    let currentQuestion = null;
+
+    const chat = document.getElementById('chat');
+
+    function addMessage(html, type = 'bot') {
+        const div = document.createElement('div');
+        div.className = `message ${type}-message`;
+        div.innerHTML = html;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+        return div;
+    }
+
+    function showQuestion(qId) {
+        const q = QUESTIONS[qId];
+        if (!q) return;
+
+        // Handle router
+        if (q.type === 'router') {
+            const nextId = q.route(answers);
+            showQuestion(nextId);
+            return;
+        }
+
+        currentQuestion = q;
+
+        let html = `<strong>${q.text}</strong>`;
+        html += `<div class="options-container" id="options-${q.id}">`;
+
+        q.options.forEach(opt => {
+            html += `<button class="option-btn" data-id="${opt.id}" onclick="selectOption('${q.id}', '${opt.id}')">${opt.label}</button>`;
+        });
+
+        html += `</div>`;
+
+        if (q.type === 'multi') {
+            html += `<div class="multi-select-hint">Select all that apply</div>`;
+            html += `<button class="submit-btn" id="submit-${q.id}" onclick="submitMulti('${q.id}')" disabled>Continue →</button>`;
+        }
+
+        addMessage(html, 'bot');
+    }
+
+    function selectOption(qId, optId) {
+        const q = QUESTIONS[qId];
+
+        if (q.type === 'single') {
+            // Single select — immediately proceed
+            answers[qId] = [optId];
+            const opt = q.options.find(o => o.id === optId);
+
+            // Show user selection
+            addMessage(opt.label, 'user');
+
+            // Calculate score for this question
+            calculateCategoryScore(q, [optId]);
+
+            // Next question
+            const next = opt.next || q.next;
+            if (next === 'done') {
+                showResults();
+            } else {
+                setTimeout(() => showQuestion(next), 400);
+            }
+        } else {
+            // Multi select — toggle
+            if (!answers[qId]) answers[qId] = [];
+            const btn = document.querySelector(`#options-${qId} [data-id="${optId}"]`);
+
+            if (answers[qId].includes(optId)) {
+                answers[qId] = answers[qId].filter(id => id !== optId);
+                btn.classList.remove('selected');
+            } else {
+                answers[qId].push(optId);
+                btn.classList.add('selected');
+            }
+
+            // Enable/disable submit
+            const submitBtn = document.getElementById(`submit-${qId}`);
+            if (submitBtn) submitBtn.disabled = answers[qId].length === 0;
+        }
+    }
+
+    function submitMulti(qId) {
+        const q = QUESTIONS[qId];
+        const selected = answers[qId] || [];
+        if (selected.length === 0) return;
+
+        // Disable buttons
+        document.querySelectorAll(`#options-${qId} .option-btn`).forEach(btn => btn.disabled = true);
+        const submitBtn = document.getElementById(`submit-${qId}`);
+        if (submitBtn) submitBtn.disabled = true;
+
+        // Show user selections
+        const labels = selected.map(id => q.options.find(o => o.id === id).label);
+        addMessage(labels.map(l => `• ${l}`).join('<br>'), 'user');
+
+        // Calculate score
+        calculateCategoryScore(q, selected);
+
+        // Next
+        const next = q.next;
+        if (next === 'done') {
+            setTimeout(() => showResults(), 500);
+        } else {
+            setTimeout(() => showQuestion(next), 400);
+        }
+    }
+
+    function calculateCategoryScore(q, selectedIds) {
+        if (q.isBooster) {
+            // Booster questions add to the base question's score
+            let boostTotal = 0;
+            selectedIds.forEach(id => {
+                const opt = q.options.find(o => o.id === id);
+                if (opt) boostTotal += opt.score;
+            });
+            // Cap the boosted base score at 9
+            const baseScore = categoryScores[q.category]?.raw || categoryScores[QUESTIONS[q.boosterBase].category]?.raw || 5;
+            const boosted = Math.min(baseScore + boostTotal, 9);
+            categoryScores[q.category] = {
+                raw: boosted,
+                weight: q.weight,
+                selected: selectedIds.map(id => {
+                    const opt = q.options.find(o => o.id === id);
+                    return { label: opt.label, score: opt.score };
+                })
+            };
+            return;
+        }
+
+        if (q.type === 'single') {
+            const opt = q.options.find(o => o.id === selectedIds[0]);
+            categoryScores[q.category] = {
+                raw: opt.score,
+                weight: q.weight,
+                selected: [{ label: opt.label, score: opt.score }]
+            };
+        } else {
+            // Multi-select: base from Q1 context + sum of selections, capped at 10
+            let total = 0;
+            const items = [];
+            selectedIds.forEach(id => {
+                const opt = q.options.find(o => o.id === id);
+                if (opt) {
+                    total += opt.score;
+                    items.push({ label: opt.label, score: opt.score });
+                }
+            });
+            categoryScores[q.category] = {
+                raw: total,
+                weight: q.weight,
+                selected: items
+            };
+        }
+    }
+
+    function computeFinalScore() {
+        // Scoring approach:
+        // Q1 (Project Type) provides a base score (0-10 scale)
+        // Q1b (Refresh Drivers) boosts the Q1 score if refresh path
+        // Q2-Q6 are additive multi-selects that shift the score
+        //
+        // Final score = weighted combination normalized to 0-10
+
+        const categories = Object.keys(categoryScores);
+        let baseScore = 0;
+        let adderTotal = 0;
+        let maxPossibleAdder = 0;
+
+        categories.forEach(cat => {
+            const entry = categoryScores[cat];
+            if (cat === 'Project Type') {
+                baseScore = entry.raw; // already 0-10 scale
+            } else if (cat === 'Refresh Drivers') {
+                // This already boosted the base — use the boosted value as base
+                baseScore = entry.raw;
+            } else {
+                adderTotal += entry.raw;
+                // Calculate max possible for this category
+                const qId = Object.keys(QUESTIONS).find(k => QUESTIONS[k].category === cat);
+                if (qId) {
+                    const q = QUESTIONS[qId];
+                    let maxCat = 0;
+                    q.options.forEach(opt => {
+                        if (opt.score > 0) maxCat += opt.score;
+                    });
+                    maxPossibleAdder += maxCat;
+                }
+            }
+        });
+
+        // Normalize adders: they can shift the base score up or down by up to 2 points
+        const adderInfluence = maxPossibleAdder > 0 ? (adderTotal / maxPossibleAdder) * 3 : 0;
+
+        // Negative adders can pull the score down
+        let finalScore = baseScore + adderInfluence;
+
+        // Clamp to 0-10
+        finalScore = Math.max(0, Math.min(10, finalScore));
+
+        return Math.round(finalScore * 10) / 10;
+    }
+
+    function getTier(score) {
+        if (score >= 7.5) return { label: 'Strong Fit for MongoDB', class: 'strong', barClass: 'score-strong', emoji: '' };
+        if (score >= 6) return { label: 'Good Fit for MongoDB', class: 'good', barClass: 'score-good', emoji: '' };
+        if (score >= 3) return { label: 'Equal Fit — MongoDB or Relational', class: 'equal', barClass: 'score-equal', emoji: '' };
+        return { label: 'Weak Fit — Consider Relational', class: 'weak', barClass: 'score-weak', emoji: '' };
+    }
+
+    function getRecommendation(tier, score) {
+        if (tier.class === 'strong') {
+            return 'MongoDB is an excellent choice for this project. The requirements align strongly with MongoDB\'s document model, flexible schema, and platform capabilities.';
+        } else if (tier.class === 'good') {
+            return 'MongoDB is a solid choice. Most requirements align well with MongoDB\'s strengths. Review any weak-fit signals to ensure they are manageable.';
+        } else if (tier.class === 'equal') {
+            return 'Both MongoDB and a relational database could work here. Consider which team has more expertise, and weigh the specific strong/weak signals in the breakdown below.';
+        } else {
+            return 'A relational database may be a better fit for this use case. The requirements lean toward structured, transactional, or analytics-heavy patterns where relational databases excel.';
+        }
+    }
+
+    function showResults() {
+        const score = computeFinalScore();
+        const tier = getTier(score);
+
+        let html = `
+            <div class="scorecard">
+                <div class="score-header">MongoDB Fit Score</div>
+                <div class="score-bar-container">
+                    <div class="score-bar ${tier.barClass}" style="width: 0%" id="score-bar">
+                        ${score} / 10
+                    </div>
+                </div>
+                <div class="score-tier ${tier.class}">${tier.label}</div>
+                <div class="score-detail">${getRecommendation(tier, score)}</div>
+
+                <div class="score-breakdown">
+                    <strong>Breakdown by Category</strong>
+        `;
+
+        Object.keys(categoryScores).forEach(cat => {
+            const entry = categoryScores[cat];
+            html += `<div style="margin-top: 12px;"><strong style="color: #ccc;">${cat}</strong></div>`;
+            entry.selected.forEach(item => {
+                const scoreClass = item.score > 0 ? 'positive' : item.score < 0 ? 'negative' : 'neutral';
+                const prefix = item.score > 0 ? '+' : '';
+                html += `
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">${item.label}</span>
+                        <span class="breakdown-score ${scoreClass}">${prefix}${item.score}</span>
+                    </div>
+                `;
+            });
+        });
+
+        html += `
+                </div>
+                <button class="restart-btn" onclick="restart()">Start Over</button>
+            </div>
+        `;
+
+        const msg = addMessage(html, 'bot');
+
+        // Animate score bar
+        setTimeout(() => {
+            const bar = document.getElementById('score-bar');
+            if (bar) bar.style.width = `${Math.max(score * 10, 15)}%`;
+        }, 100);
+    }
+
+    function restart() {
+        answers = {};
+        categoryScores = {};
+        currentQuestion = null;
+        chat.innerHTML = '';
+        start();
+    }
+
+    function start() {
+        addMessage("Welcome! I'll help you evaluate whether <strong>MongoDB</strong> is the right database for your project. I'll ask you a series of questions and calculate a fit score from <strong>0 to 10</strong>.<br><br><strong>Score Guide:</strong><br>• 7.5 – 10: Strong fit for MongoDB<br>• 6 – 7.5: Good fit<br>• 3 – 5.5: Equal fit (MongoDB or relational)<br>• 0 – 2.5: Weak fit — consider relational", 'bot');
+        setTimeout(() => showQuestion('q1'), 600);
+    }
+
+    // Start the bot
+    start();
+    </script>
+</body>
+</html>
