@@ -370,7 +370,7 @@
             options: [
                 { id: 'reduce_devops', label: 'Constant ask from developers to reduce dependency on DevOps / DBA teams for data operations', score: 1.5 },
                 { id: 'move_faster', label: 'Business asks to move faster even when you\'re already moving fast', score: 1.2 },
-                { id: 'no_bolt_on', label: 'Want to avoid bolting on third-party tools for every database feature (e.g., Postgres needing separate tools for search, caching, streaming, etc.)', score: 1.5 }
+                { id: 'no_bolt_on', label: 'Want to avoid bolting on third-party tools for every database feature (e.g., separate tools for search, caching, streaming, etc.)', score: 1.5 }
             ],
             weight: 1.0,
             category: 'Developer Velocity',
@@ -384,7 +384,8 @@
                 { id: 'text_search', label: 'Natural language / full-text search alongside operational data', score: 1.2 },
                 { id: 'vector_search', label: 'Vector search (embeddings, similarity) alongside operational data', score: 1.5 },
                 { id: 'event_streaming', label: 'Event streaming / change-driven reactions alongside operational data', score: 1.0 },
-                { id: 'multiple_above', label: 'Need 2+ of the above on a single platform (consolidation play)', score: 1.5 }
+                { id: 'multiple_above', label: 'Need 2+ of the above on a single platform (consolidation play)', score: 1.5 },
+                { id: 'none_required', label: 'None of these required', score: 0 }
             ],
             weight: 1.0,
             category: 'Platform Consolidation',
