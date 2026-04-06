@@ -296,7 +296,8 @@
                 { id: 'decouple_logic', label: 'Decoupling business logic from database', score: 1.0 },
                 { id: 'api_microservices', label: 'API-first / microservices architecture', score: 1.0 },
                 { id: 'geo_distributed', label: 'Geo-distributed / multi-region availability', score: 1.0 },
-                { id: 'heavy_transactions', label: 'Heavy multi-table transactional workflows', score: -1.0 },
+                { id: 'erp_complex', label: 'ERP system with complex nested entity relationships (e.g., SAP, Oracle EBS style workloads)', score: -2.0 },
+                { id: 'heavy_transactions', label: 'Heavy multi-table transactional workflows across deeply related entities', score: -1.0 },
                 { id: 'relational_audit', label: 'Regulatory requirement for strict relational audit trails', score: -0.5 }
             ],
             weight: 1.0,
