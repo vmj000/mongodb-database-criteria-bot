@@ -387,10 +387,10 @@
             text: "Does your application need any of these additional capabilities alongside operational data? (Select all that apply)",
             type: 'multi',
             options: [
-                { id: 'text_search', label: 'Natural language / full-text search alongside operational data', score: 1.2 },
-                { id: 'vector_search', label: 'Vector search (embeddings, similarity) alongside operational data', score: 1.5 },
+                { id: 'text_search', label: 'Natural language / full-text search alongside operational data', score: 1.0 },
+                { id: 'vector_search', label: 'Vector search (embeddings, similarity) alongside operational data', score: 1.0 },
                 { id: 'event_streaming', label: 'Event streaming / change-driven reactions alongside operational data', score: 1.0 },
-                { id: 'multiple_above', label: 'Need 2+ of the above on a single platform (consolidation play)', score: 1.5 },
+                { id: 'multiple_above', label: 'Need 2+ of the above on a single platform (consolidation play)', score: 2.0 },
                 { id: 'none_required', label: 'None of these required', score: 0 }
             ],
             weight: 1.0,
@@ -512,47 +512,47 @@
     }
 
     function calculateCategoryScore(q, selectedIds) {
+        const items = selectedIds.map(id => {
+            const opt = q.options.find(o => o.id === id);
+            return { label: opt.label, score: opt.score };
+        });
+
         if (q.isBooster) {
-            // Booster questions add to the base question's score
-            let boostTotal = 0;
-            selectedIds.forEach(id => {
-                const opt = q.options.find(o => o.id === id);
-                if (opt) boostTotal += opt.score;
-            });
-            // Cap the boosted base score at 9
-            const baseScore = categoryScores[q.category]?.raw || categoryScores[QUESTIONS[q.boosterBase].category]?.raw || 5;
-            const boosted = Math.min(baseScore + boostTotal, 9);
-            categoryScores[q.category] = {
-                raw: boosted,
-                weight: q.weight,
-                selected: selectedIds.map(id => {
-                    const opt = q.options.find(o => o.id === id);
-                    return { label: opt.label, score: opt.score };
-                })
-            };
+            // Booster: compute a normalized 0-10 score for the refresh drivers
+            const maxPositive = q.options.reduce((sum, o) => sum + Math.max(0, o.score), 0);
+            const rawSum = items.reduce((sum, i) => sum + i.score, 0);
+            // Scale: 0 drivers selected = 3 (weak refresh case), all drivers = 9
+            const normalized = maxPositive > 0 ? 3 + (rawSum / maxPositive) * 6 : 3;
+            categoryScores[q.category] = { raw: Math.min(normalized, 9), weight: q.weight, selected: items };
             return;
         }
 
         if (q.type === 'single') {
-            const opt = q.options.find(o => o.id === selectedIds[0]);
-            categoryScores[q.category] = {
-                raw: opt.score,
-                weight: q.weight,
-                selected: [{ label: opt.label, score: opt.score }]
-            };
+            categoryScores[q.category] = { raw: items[0].score, weight: q.weight, selected: items };
         } else {
-            // Multi-select: base from Q1 context + sum of selections, capped at 10
-            let total = 0;
-            const items = [];
-            selectedIds.forEach(id => {
-                const opt = q.options.find(o => o.id === id);
-                if (opt) {
-                    total += opt.score;
-                    items.push({ label: opt.label, score: opt.score });
-                }
+            // Multi-select: normalize to a 0-10 scale per category
+            // Positive and negative scores are normalized separately for symmetry
+            const maxPositive = q.options.reduce((sum, o) => sum + Math.max(0, o.score), 0);
+            const maxNegative = Math.abs(q.options.reduce((sum, o) => sum + Math.min(0, o.score), 0));
+
+            let positiveSum = 0;
+            let negativeSum = 0;
+            items.forEach(i => {
+                if (i.score > 0) positiveSum += i.score;
+                else negativeSum += Math.abs(i.score);
             });
+
+            // Each category scores 0-10:
+            // - Start at 5 (neutral)
+            // - Positive selections push toward 10
+            // - Negative selections push toward 0
+            // - Both are normalized against their own max so negatives have equal power
+            const posInfluence = maxPositive > 0 ? (positiveSum / maxPositive) * 5 : 0;
+            const negInfluence = maxNegative > 0 ? (negativeSum / maxNegative) * 5 : 0;
+            const normalized = 5 + posInfluence - negInfluence;
+
             categoryScores[q.category] = {
-                raw: total,
+                raw: Math.max(0, Math.min(10, normalized)),
                 weight: q.weight,
                 selected: items
             };
@@ -561,44 +561,40 @@
 
     function computeFinalScore() {
         // Scoring approach:
-        // Q1 (Project Type) provides a base score (0-10 scale)
-        // Q1b (Refresh Drivers) boosts the Q1 score if refresh path
-        // Q2-Q6 are additive multi-selects that shift the score
-        //
-        // Final score = weighted combination normalized to 0-10
+        // Each category (including Q1) produces a 0-10 normalized score.
+        // Q1 contributes 30% of final score, remaining categories share 70%.
+        // This ensures detail questions (Q2-Q6) meaningfully influence the result
+        // and negative signals have real weight.
 
-        const categories = Object.keys(categoryScores);
-        let baseScore = 0;
-        let adderTotal = 0;
-        let maxPossibleAdder = 0;
+        const BASE_WEIGHT = 0.30;  // Q1 / Q1b influence
+        const DETAIL_WEIGHT = 0.70; // Q2-Q6 influence
 
-        categories.forEach(cat => {
+        let baseScore = 5;
+        const detailScores = [];
+
+        Object.keys(categoryScores).forEach(cat => {
             const entry = categoryScores[cat];
             if (cat === 'Project Type') {
-                baseScore = entry.raw; // already 0-10 scale
+                // Normalize Q1's 5-8 range to 0-10 scale
+                // 5 (shared DB / refresh) -> 2.5, 7.5 -> 6.25, 8 -> 7.5
+                baseScore = ((entry.raw - 5) / 3) * 10;
+                baseScore = Math.max(0, Math.min(10, baseScore));
             } else if (cat === 'Refresh Drivers') {
-                // This already boosted the base — use the boosted value as base
+                // Booster already normalized to 0-10, overrides base
                 baseScore = entry.raw;
             } else {
-                adderTotal += entry.raw;
-                // Calculate max possible for this category
-                const qId = Object.keys(QUESTIONS).find(k => QUESTIONS[k].category === cat);
-                if (qId) {
-                    const q = QUESTIONS[qId];
-                    let maxCat = 0;
-                    q.options.forEach(opt => {
-                        if (opt.score > 0) maxCat += opt.score;
-                    });
-                    maxPossibleAdder += maxCat;
-                }
+                // Detail categories — already normalized to 0-10
+                detailScores.push(entry.raw);
             }
         });
 
-        // Normalize adders: they can shift the base score up or down by up to 2 points
-        const adderInfluence = maxPossibleAdder > 0 ? (adderTotal / maxPossibleAdder) * 3 : 0;
+        // Average the detail scores (each category has equal voice)
+        const detailAvg = detailScores.length > 0
+            ? detailScores.reduce((a, b) => a + b, 0) / detailScores.length
+            : 5;
 
-        // Negative adders can pull the score down
-        let finalScore = baseScore + adderInfluence;
+        // Weighted combination
+        let finalScore = (baseScore * BASE_WEIGHT) + (detailAvg * DETAIL_WEIGHT);
 
         // Clamp to 0-10
         finalScore = Math.max(0, Math.min(10, finalScore));
