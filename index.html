@@ -195,49 +195,51 @@
         .score-tier.equal { color: #f0c929; }
         .score-tier.weak { color: #e74c3c; }
 
-        .score-dropdown {
+        .dropdown-toggle {
             margin-top: 16px;
-            border: 1px solid #0f3460;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .score-dropdown summary {
             padding: 12px 16px;
             background: #0a0a1a;
+            border: 1px solid #0f3460;
+            border-radius: 10px;
             color: #ccc;
             font-weight: 600;
             font-size: 0.95rem;
             cursor: pointer;
-            list-style: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            width: 100%;
+            text-align: left;
         }
 
-        .score-dropdown summary::-webkit-details-marker {
-            display: none;
+        .dropdown-toggle:hover {
+            background: #0f3460;
+            border-color: #00ed64;
         }
 
-        .score-dropdown summary::before {
-            content: '▶';
-            font-size: 0.7rem;
+        .dropdown-arrow {
             color: #00ed64;
-            transition: transform 0.2s;
+            font-size: 0.75rem;
+            transition: transform 0.3s;
+            display: inline-block;
         }
 
-        .score-dropdown[open] summary::before {
+        .dropdown-arrow.open {
             transform: rotate(90deg);
         }
 
-        .score-dropdown summary:hover {
-            background: #0f3460;
+        .dropdown-content {
+            display: none;
+            border: 1px solid #0f3460;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 0 16px 16px;
+            background: #0a0a1a;
+            margin-top: -10px;
         }
 
-        .score-dropdown .score-breakdown {
-            padding: 0 16px 16px;
-            margin-top: 0;
-            border-top: 1px solid #0f3460;
+        .dropdown-content.open {
+            display: block;
         }
 
         .score-summary {
@@ -820,8 +822,11 @@
                 <div class="score-tier ${tier.class}">${tier.label}</div>
                 <div class="score-detail">${getRecommendation(tier, score)}</div>
 
-                <details class="score-dropdown">
-                    <summary>Breakdown by Category</summary>
+                <button class="dropdown-toggle" onclick="toggleBreakdown()">
+                    <span class="dropdown-arrow" id="breakdown-arrow">&#9654;</span>
+                    Breakdown by Category
+                </button>
+                <div class="dropdown-content" id="breakdown-content">
                     <div class="score-breakdown">
         `;
 
@@ -842,7 +847,7 @@
 
         html += `
                     </div>
-                </details>
+                </div>
                 <div class="score-summary">
                     ${getSummary(tier, score)}
                 </div>
@@ -861,6 +866,13 @@
             const bar = document.getElementById('score-bar');
             if (bar) bar.style.width = `${Math.max(score * 10, 15)}%`;
         }, 100);
+    }
+
+    function toggleBreakdown() {
+        const content = document.getElementById('breakdown-content');
+        const arrow = document.getElementById('breakdown-arrow');
+        content.classList.toggle('open');
+        arrow.classList.toggle('open');
     }
 
     function restart() {
