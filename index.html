@@ -479,9 +479,12 @@
                 btn.classList.add('selected');
             }
 
-            // Enable/disable submit
+            // Enable/disable submit and scroll to it
             const submitBtn = document.getElementById(`submit-${qId}`);
-            if (submitBtn) submitBtn.disabled = answers[qId].length === 0;
+            if (submitBtn) {
+                submitBtn.disabled = answers[qId].length === 0;
+                submitBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
     }
 
