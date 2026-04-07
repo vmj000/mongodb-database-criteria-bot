@@ -674,6 +674,92 @@
         }
     }
 
+    function getAtlasFeatures() {
+        // Map selected answers to relevant MongoDB Atlas features
+        const allSelected = new Set();
+        Object.keys(answers).forEach(qId => {
+            (answers[qId] || []).forEach(id => allSelected.add(id));
+        });
+
+        const featureMap = [
+            {
+                triggers: ['ai_rag', 'agentic_ai', 'integrate_ai', 'vector_search'],
+                feature: 'Atlas Vector Search',
+                desc: 'Native vector search for AI/RAG workloads — store embeddings alongside operational data, run similarity searches, and power agentic AI with short and long-term memory, all without a separate vector database.'
+            },
+            {
+                triggers: ['text_search', 'digital_ux', 'digital_app'],
+                feature: 'Atlas Search',
+                desc: 'Full-text search powered by Lucene, running directly on your data — no need to sync to a separate Elasticsearch cluster. Supports fuzzy matching, autocomplete, faceted search, and relevance scoring.'
+            },
+            {
+                triggers: ['realtime', 'add_realtime', 'event_driven', 'event_streaming', 'status_tracking'],
+                feature: 'Change Streams & Atlas Stream Processing',
+                desc: 'React to data changes in real-time with change streams. Atlas Stream Processing lets you build event-driven pipelines that filter, transform, and route data as it flows — without managing Kafka or separate streaming infrastructure.'
+            },
+            {
+                triggers: ['always_on', 'geo_distributed', 'cloud_portability'],
+                feature: 'Global Clusters & Multi-Cloud',
+                desc: 'Deploy across AWS, Azure, and GCP — even simultaneously. Zone sharding pins data to specific regions for compliance, while global clusters provide near-zero downtime with automated failover across clouds and on-prem.'
+            },
+            {
+                triggers: ['temporal_data'],
+                feature: 'Time Series Collections',
+                desc: 'Purpose-built storage for time-stamped data with automatic bucketing, optimized compression, and efficient window-based queries — ideal for IoT, telemetry, financial ticks, and temporal versioning.'
+            },
+            {
+                triggers: ['ddd', 'few_tables_low_card', 'polymorphic', 'polymorphic_store', 'consolidate_stores', 'no_flatten'],
+                feature: 'Flexible Document Model',
+                desc: 'Store data the way your application uses it — as rich, nested documents with arrays and sub-documents. No ORM impedance mismatch, no joins at query time. Schema validation rules give you control without rigidity.'
+            },
+            {
+                triggers: ['rigid_schema', 'eliminate_migrations', 'schema_versioning'],
+                feature: 'Schema Flexibility with Governance',
+                desc: 'Evolve your schema without downtime migrations or ALTER TABLE locks. MongoDB\'s schema validation lets you enforce structure where needed, and tools like Liquibase and Mongock provide versioned migration workflows for enterprise governance.'
+            },
+            {
+                triggers: ['runtime_aggregations', 'realtime_compute'],
+                feature: 'Aggregation Pipeline',
+                desc: 'A powerful server-side computation framework — group, transform, join, bucket, and reshape data in multi-stage pipelines. Runs computations where the data lives, avoiding costly round trips and application-side processing.'
+            },
+            {
+                triggers: ['reduce_devops', 'no_bolt_on', 'move_faster'],
+                feature: 'Atlas Developer Data Platform',
+                desc: 'A fully managed platform that consolidates database, search, vector, streaming, and triggers into a single service. Reduces operational overhead, eliminates third-party tool sprawl, and lets developers focus on building instead of managing infrastructure.'
+            },
+            {
+                triggers: ['operational_layer', 'offload_layer', 'odl_heavy_reads', 'new_shield'],
+                feature: 'Operational Data Layer Pattern',
+                desc: 'MongoDB excels as a fast read/write layer that shields legacy backends from heavy traffic. Its flexible schema lets you aggregate data from multiple core systems into a single store, serving low-latency queries without touching origin systems.'
+            },
+            {
+                triggers: ['decouple_logic', 'logic_app_level', 'api_microservices', 'monolith_to_ddd'],
+                feature: 'Microservices & Application-Tier Architecture',
+                desc: 'MongoDB\'s document-per-service model naturally fits microservices. Each service owns its data, business logic stays in the application tier, and the flexible schema evolves independently per service boundary without cross-team migration coordination.'
+            }
+        ];
+
+        const matchedFeatures = featureMap.filter(f =>
+            f.triggers.some(t => allSelected.has(t))
+        );
+
+        if (matchedFeatures.length === 0) {
+            return '<strong>MongoDB Atlas Platform Capabilities</strong><br><br>' +
+                'MongoDB Atlas is a unified developer data platform offering database, search, vector search, streaming, and serverless functions — all managed as a single service across any major cloud or on-prem.';
+        }
+
+        let html = '<strong>MongoDB Atlas Features That Support Your Score</strong><br><br>' +
+            'Based on your selections, these MongoDB Atlas capabilities are most relevant to your project:<br><br>';
+
+        matchedFeatures.forEach(f => {
+            html += `<div style="margin-bottom: 14px;">` +
+                `<strong style="color: #00ed64;">${f.feature}</strong><br>` +
+                `<span style="color: #aaa;">${f.desc}</span></div>`;
+        });
+
+        return html;
+    }
+
     function showResults() {
         const score = computeFinalScore();
         const tier = getTier(score);
@@ -712,6 +798,9 @@
                 </div>
                 <div class="score-summary">
                     ${getSummary(tier, score)}
+                </div>
+                <div class="score-summary" style="border-left-color: #00ed64;">
+                    ${getAtlasFeatures()}
                 </div>
                 <button class="restart-btn" onclick="restart()">Start Over</button>
             </div>
