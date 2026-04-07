@@ -195,6 +195,51 @@
         .score-tier.equal { color: #f0c929; }
         .score-tier.weak { color: #e74c3c; }
 
+        .score-dropdown {
+            margin-top: 16px;
+            border: 1px solid #0f3460;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .score-dropdown summary {
+            padding: 12px 16px;
+            background: #0a0a1a;
+            color: #ccc;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-dropdown summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .score-dropdown summary::before {
+            content: '▶';
+            font-size: 0.7rem;
+            color: #00ed64;
+            transition: transform 0.2s;
+        }
+
+        .score-dropdown[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .score-dropdown summary:hover {
+            background: #0f3460;
+        }
+
+        .score-dropdown .score-breakdown {
+            padding: 0 16px 16px;
+            margin-top: 0;
+            border-top: 1px solid #0f3460;
+        }
+
         .score-summary {
             margin-top: 20px;
             padding: 18px;
@@ -775,8 +820,9 @@
                 <div class="score-tier ${tier.class}">${tier.label}</div>
                 <div class="score-detail">${getRecommendation(tier, score)}</div>
 
-                <div class="score-breakdown">
-                    <strong>Breakdown by Category</strong>
+                <details class="score-dropdown">
+                    <summary>Breakdown by Category</summary>
+                    <div class="score-breakdown">
         `;
 
         Object.keys(categoryScores).forEach(cat => {
@@ -795,7 +841,8 @@
         });
 
         html += `
-                </div>
+                    </div>
+                </details>
                 <div class="score-summary">
                     ${getSummary(tier, score)}
                 </div>
