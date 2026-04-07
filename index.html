@@ -483,7 +483,9 @@
             const submitBtn = document.getElementById(`submit-${qId}`);
             if (submitBtn) {
                 submitBtn.disabled = answers[qId].length === 0;
-                submitBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                setTimeout(() => {
+                    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+                }, 50);
             }
         }
     }
