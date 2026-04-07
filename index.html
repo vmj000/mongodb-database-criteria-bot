@@ -11,17 +11,11 @@
             box-sizing: border-box;
         }
 
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #1a1a2e;
             color: #e0e0e0;
-            display: flex;
-            flex-direction: column;
+            min-height: 100vh;
         }
 
         header {
@@ -48,17 +42,13 @@
         }
 
         .chat-container {
-            flex: 1;
             max-width: 800px;
             width: 100%;
             margin: 0 auto;
             padding: 20px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
             gap: 16px;
-            min-height: 0;
         }
 
         .message {
@@ -454,7 +444,11 @@
             html += `<button class="submit-btn" id="submit-${q.id}" onclick="submitMulti('${q.id}')" disabled>Continue →</button>`;
         }
 
-        addMessage(html, 'bot');
+        const msg = addMessage(html, 'bot');
+        // Scroll so the bottom of the new question is visible
+        setTimeout(() => {
+            msg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
     }
 
     function selectOption(qId, optId) {
@@ -491,11 +485,10 @@
                 btn.classList.add('selected');
             }
 
-            // Enable/disable submit and scroll to it
+            // Enable/disable submit
             const submitBtn = document.getElementById(`submit-${qId}`);
             if (submitBtn) {
                 submitBtn.disabled = answers[qId].length === 0;
-                scrollToBottom();
             }
         }
     }
@@ -678,8 +671,9 @@
 
         const msg = addMessage(html, 'bot');
 
-        // Animate score bar
+        // Scroll scorecard into view and animate bar
         setTimeout(() => {
+            msg.scrollIntoView({ behavior: 'smooth', block: 'end' });
             const bar = document.getElementById('score-bar');
             if (bar) bar.style.width = `${Math.max(score * 10, 15)}%`;
         }, 100);
