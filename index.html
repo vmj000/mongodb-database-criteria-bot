@@ -357,6 +357,8 @@
                 { id: 'few_tables_low_card', label: 'Entity data fits few tables, low cardinality — natural single document', score: 1.5 },
                 { id: 'runtime_aggregations', label: 'Heavy runtime computations / aggregations on operational data', score: 1.2 },
                 { id: 'schema_versioning', label: 'Schema versioning and lifecycle management is important — MongoDB supports controlled-yet-flexible schema with tools like Liquibase (Spring Boot)', score: 1.2 },
+                { id: 'realtime_compute', label: 'Service primarily caters to real-time pre-programmed computations (strong MongoDB fit)', score: 1.5 },
+                { id: 'human_analytical', label: 'Service primarily caters to ad-hoc analytical querying by humans (better suited to relational)', score: -1.5 },
                 { id: 'analytics_primary', label: 'Primary purpose is analytics / BI for internal analysts and data teams', score: -2.0 }
             ],
             weight: 1.0,
