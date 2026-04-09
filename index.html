@@ -423,6 +423,22 @@
             ],
             weight: 1.0,
             category: 'Data & Domain Characteristics',
+            next: 'q4b'
+        },
+        q4b: {
+            id: 'q4b',
+            text: "Are any of these patterns already present (or planned) in your architecture? (Select all that apply)",
+            type: 'multi',
+            options: [
+                { id: 'jsonb_columns', label: 'Storing part of the data as JSON / JSONB columns in a relational database', score: 1.5 },
+                { id: 'flatten_xml', label: 'Flattening XML or nested data structures into relational tables for querying', score: 1.5 },
+                { id: 'computed_fields', label: 'Pre-computing and storing derived / aggregated fields to avoid expensive runtime calculations', score: 1.2 },
+                { id: 'caching_layer', label: 'Using a caching layer (e.g., Redis, Memcached) in front of the database for read performance', score: 1.5 },
+                { id: 'search_engine_bolt', label: 'Running a separate search engine (e.g., Elasticsearch, Solr) alongside the database for full-text / natural-language search', score: 1.5 },
+                { id: 'none_denorm', label: 'None of the above', score: 0 }
+            ],
+            weight: 1.0,
+            category: 'Implicit Denormalization',
             next: 'q5'
         },
         q5: {
@@ -735,7 +751,7 @@
                 desc: 'Native vector search for AI/RAG workloads — store embeddings alongside operational data, run similarity searches, and power agentic AI with short and long-term memory, all without a separate vector database.'
             },
             {
-                triggers: ['text_search', 'digital_ux', 'digital_app'],
+                triggers: ['text_search', 'digital_ux', 'digital_app', 'search_engine_bolt'],
                 feature: 'Atlas Search',
                 desc: 'Full-text search powered by Lucene, running directly on your data — no need to sync to a separate Elasticsearch cluster. Supports fuzzy matching, autocomplete, faceted search, and relevance scoring.'
             },
@@ -755,7 +771,7 @@
                 desc: 'Purpose-built storage for time-stamped data with automatic bucketing, optimized compression, and efficient window-based queries — ideal for IoT, telemetry, financial ticks, and temporal versioning.'
             },
             {
-                triggers: ['ddd', 'few_tables_low_card', 'polymorphic', 'polymorphic_store', 'consolidate_stores', 'no_flatten'],
+                triggers: ['ddd', 'few_tables_low_card', 'polymorphic', 'polymorphic_store', 'consolidate_stores', 'no_flatten', 'jsonb_columns', 'flatten_xml'],
                 feature: 'Flexible Document Model',
                 desc: 'Store data the way your application uses it — as rich, nested documents with arrays and sub-documents. No ORM impedance mismatch, no joins at query time. Schema validation rules give you control without rigidity.'
             },
@@ -765,12 +781,12 @@
                 desc: 'Evolve your schema without downtime migrations or ALTER TABLE locks. MongoDB\'s schema validation lets you enforce structure where needed, and tools like Liquibase and Mongock provide versioned migration workflows for enterprise governance.'
             },
             {
-                triggers: ['runtime_aggregations', 'realtime_compute'],
+                triggers: ['runtime_aggregations', 'realtime_compute', 'computed_fields'],
                 feature: 'Aggregation Pipeline',
                 desc: 'A powerful server-side computation framework — group, transform, join, bucket, and reshape data in multi-stage pipelines. Runs computations where the data lives, avoiding costly round trips and application-side processing.'
             },
             {
-                triggers: ['reduce_devops', 'no_bolt_on', 'move_faster'],
+                triggers: ['reduce_devops', 'no_bolt_on', 'move_faster', 'caching_layer', 'search_engine_bolt'],
                 feature: 'Atlas Developer Data Platform',
                 desc: 'A fully managed platform that consolidates database, search, vector, streaming, and triggers into a single service. Reduces operational overhead, eliminates third-party tool sprawl, and lets developers focus on building instead of managing infrastructure.'
             },
