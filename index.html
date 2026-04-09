@@ -839,10 +839,26 @@
         return html;
     }
 
-    function getSpectrumDiagram() {
+    function getSpectrumDiagram(score, tier) {
+        // Map score (0-10) to x position on the line (60-640)
+        const px = 60 + (score / 10) * 580;
+
+        // Pointer color based on tier
+        const colorMap = { strong: '#00ed64', good: '#5bc0be', equal: '#f0c929', weak: '#e74c3c' };
+        const pointerColor = colorMap[tier.class] || '#00ed64';
+
+        // Label for the pointer
+        const labelMap = {
+            strong: 'Your project \u2014 strong document DB fit',
+            good: 'Your project \u2014 good document DB fit',
+            equal: 'Your project \u2014 could go either way',
+            weak: 'Your project \u2014 leans relational'
+        };
+        const pointerLabel = labelMap[tier.class] || 'Your project';
+
         return `
         <div class="spectrum-box">
-            <svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+            <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
                 <!-- Title -->
                 <text x="350" y="30" text-anchor="middle" fill="#e8e8e8" font-size="17" font-weight="700">It\u2019s not a binary choice, but a spectrum</text>
 
@@ -852,6 +868,10 @@
                         <stop offset="0%" stop-color="#00684a"/>
                         <stop offset="100%" stop-color="#00ed64"/>
                     </linearGradient>
+                    <filter id="pointerGlow">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
                 </defs>
                 <line x1="60" y1="120" x2="640" y2="120" stroke="url(#lineGrad)" stroke-width="4" stroke-linecap="round"/>
 
@@ -890,18 +910,29 @@
                 <text x="555" y="78" text-anchor="middle" fill="#8899aa" font-size="9.5">Single table</text>
                 <text x="555" y="90" text-anchor="middle" fill="#8899aa" font-size="9.5">design</text>
 
+                <!-- YOUR SCORE POINTER -->
+                <!-- Pointer triangle pointing down to the line -->
+                <polygon points="${px - 8},108 ${px + 8},108 ${px},120" fill="${pointerColor}" filter="url(#pointerGlow)"/>
+                <!-- Glow circle on the line -->
+                <circle cx="${px}" cy="120" r="7" fill="${pointerColor}" opacity="0.3"/>
+                <circle cx="${px}" cy="120" r="4" fill="${pointerColor}"/>
+                <!-- Score badge above pointer -->
+                <rect x="${px - 24}" y="84" width="48" height="20" rx="10" fill="${pointerColor}"/>
+                <text x="${px}" y="98" text-anchor="middle" fill="#0f1b2d" font-size="11" font-weight="800">${score} / 10</text>
+                <!-- Label below -->
+                <text x="${px}" y="172" text-anchor="middle" fill="${pointerColor}" font-size="8.5" font-weight="600">${pointerLabel}</text>
+
                 <!-- Range: Suited to a tabular database -->
-                <line x1="80" y1="175" x2="80" y2="175" stroke="#c0392b" stroke-width="1"/>
-                <text x="230" y="178" text-anchor="middle" fill="#c0392b" font-size="8.5" font-style="italic">\u2190  Suited to a tabular database  \u2192</text>
-                <line x1="100" y1="175" x2="360" y2="175" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+                <text x="230" y="195" text-anchor="middle" fill="#c0392b" font-size="8.5" font-style="italic">\u2190  Suited to a tabular database  \u2192</text>
+                <line x1="100" y1="192" x2="360" y2="192" stroke="#c0392b" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
 
                 <!-- Range: key/value -->
-                <text x="555" y="178" text-anchor="middle" fill="#c89530" font-size="8.5" font-style="italic">\u2190 key/value \u2192</text>
-                <line x1="505" y1="175" x2="605" y2="175" stroke="#c89530" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+                <text x="555" y="195" text-anchor="middle" fill="#c89530" font-size="8.5" font-style="italic">\u2190 key/value \u2192</text>
+                <line x1="505" y1="192" x2="605" y2="192" stroke="#c89530" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
 
                 <!-- Range: Suited to a document database -->
-                <text x="420" y="198" text-anchor="middle" fill="#00ed64" font-size="9" font-style="italic">\u2190  Suited to a document database  \u2192</text>
-                <line x1="240" y1="195" x2="600" y2="195" stroke="#00ed64" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+                <text x="420" y="215" text-anchor="middle" fill="#00ed64" font-size="9" font-style="italic">\u2190  Suited to a document database  \u2192</text>
+                <line x1="240" y1="212" x2="600" y2="212" stroke="#00ed64" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
 
                 <!-- MongoDB leaf icon (top right) -->
                 <g transform="translate(665, 15) scale(0.5)">
@@ -955,7 +986,7 @@
                 <div class="score-summary">
                     ${getSummary(tier, score)}
                 </div>
-                ${getSpectrumDiagram()}
+                ${getSpectrumDiagram(score, tier)}
                 <div class="score-summary" style="border-left-color: #00ed64;">
                     ${getAtlasFeatures()}
                 </div>
