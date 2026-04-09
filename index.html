@@ -301,6 +301,134 @@
             margin-top: 4px;
             line-height: 1.5;
         }
+
+        /* Spectrum diagram */
+        .spectrum-box {
+            margin-top: 20px;
+            background: #0f1b2d;
+            border-radius: 14px;
+            padding: 28px 24px 24px;
+            border: 1px solid #0f3460;
+        }
+
+        .spectrum-title {
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #e8e8e8;
+            margin-bottom: 28px;
+            line-height: 1.4;
+        }
+
+        .spectrum-track {
+            position: relative;
+            height: 140px;
+            margin: 0 10px;
+        }
+
+        .spectrum-line {
+            position: absolute;
+            top: 50px;
+            left: 30px;
+            right: 30px;
+            height: 4px;
+            background: linear-gradient(90deg, #00684a, #00ed64);
+            border-radius: 2px;
+        }
+
+        .spectrum-node {
+            position: absolute;
+            top: 38px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #00ed64;
+            border: 3px solid #0f1b2d;
+            box-shadow: 0 0 0 2px #00ed64;
+            z-index: 2;
+        }
+
+        .spectrum-node.left { left: 16px; }
+        .spectrum-node.right { right: 16px; }
+
+        .spectrum-node-label {
+            position: absolute;
+            top: 35px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
+            background: #00684a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 3;
+        }
+
+        .spectrum-node-label.left { left: 0; }
+        .spectrum-node-label.right { right: 0; }
+
+        .spectrum-marker {
+            position: absolute;
+            top: 0;
+            text-align: center;
+            transform: translateX(-50%);
+        }
+
+        .spectrum-marker-line {
+            width: 2px;
+            height: 18px;
+            background: #3a5a7c;
+            margin: 0 auto 0;
+        }
+
+        .spectrum-marker-dot {
+            width: 10px;
+            height: 10px;
+            background: #3a5a7c;
+            border-radius: 50%;
+            margin: 0 auto;
+        }
+
+        .spectrum-marker-text {
+            font-size: 0.65rem;
+            color: #99aabb;
+            max-width: 80px;
+            line-height: 1.3;
+            margin-bottom: 6px;
+        }
+
+        .spectrum-ranges {
+            position: absolute;
+            bottom: 0;
+            left: 30px;
+            right: 30px;
+            height: 40px;
+        }
+
+        .spectrum-range {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .spectrum-range-arrows {
+            font-size: 0.65rem;
+            color: #5a8a6a;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .spectrum-range-arrows.orange { color: #c89530; }
+
+        .spectrum-range-label {
+            font-size: 0.6rem;
+            font-style: italic;
+            color: #6a9a7a;
+            white-space: nowrap;
+        }
+
+        .spectrum-range-label.orange { color: #c89530; }
     </style>
 </head>
 <body>
@@ -823,6 +951,63 @@
         return html;
     }
 
+    function getSpectrumDiagram() {
+        return `
+        <div class="spectrum-box">
+            <div class="spectrum-title">It's not a binary choice, but a spectrum</div>
+            <div class="spectrum-track">
+                <!-- Main line -->
+                <div class="spectrum-line"></div>
+
+                <!-- Left node: 5NF -->
+                <div class="spectrum-node left"></div>
+                <div class="spectrum-node-label left">5NF</div>
+
+                <!-- Right node: ALL in 1 Doc -->
+                <div class="spectrum-node right"></div>
+                <div class="spectrum-node-label right">ALL in 1 Doc</div>
+
+                <!-- Markers above the line -->
+                <div class="spectrum-marker" style="left: 18%;">
+                    <div class="spectrum-marker-text">Unrealistic Default RDBMS Position</div>
+                    <div class="spectrum-marker-line"></div>
+                    <div class="spectrum-marker-dot"></div>
+                </div>
+
+                <div class="spectrum-marker" style="left: 40%;">
+                    <div class="spectrum-marker-text">More realistic RDBMS</div>
+                    <div class="spectrum-marker-line"></div>
+                    <div class="spectrum-marker-dot"></div>
+                </div>
+
+                <div class="spectrum-marker" style="left: 58%;">
+                    <div class="spectrum-marker-text">How we design systems today</div>
+                    <div class="spectrum-marker-line"></div>
+                    <div class="spectrum-marker-dot"></div>
+                </div>
+
+                <div class="spectrum-marker" style="left: 78%;">
+                    <div class="spectrum-marker-text">Single table design</div>
+                    <div class="spectrum-marker-line"></div>
+                    <div class="spectrum-marker-dot"></div>
+                </div>
+
+                <!-- Range labels below the line -->
+                <div class="spectrum-ranges">
+                    <div class="spectrum-range" style="left: 0; width: 45%;">
+                        <div class="spectrum-range-arrows">\u2190 Suited to a tabular database \u2192</div>
+                    </div>
+                    <div class="spectrum-range" style="left: 68%; width: 22%;">
+                        <div class="spectrum-range-arrows orange">\u2190 key/value \u2192</div>
+                    </div>
+                    <div class="spectrum-range" style="left: 30%; width: 55%;">
+                        <div class="spectrum-range-label">\u2190 Suited to a document database \u2192</div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }
+
     function showResults() {
         const score = computeFinalScore();
         const tier = getTier(score);
@@ -867,6 +1052,7 @@
                 <div class="score-summary">
                     ${getSummary(tier, score)}
                 </div>
+                ${getSpectrumDiagram()}
                 <div class="score-summary" style="border-left-color: #00ed64;">
                     ${getAtlasFeatures()}
                 </div>
