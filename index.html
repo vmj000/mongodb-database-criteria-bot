@@ -716,50 +716,49 @@
     }
 
     function getTier(score) {
-        if (score >= 7.5) return { label: 'Strong Fit for MongoDB', class: 'strong', barClass: 'score-strong', emoji: '' };
-        if (score >= 6) return { label: 'Good Fit for MongoDB', class: 'good', barClass: 'score-good', emoji: '' };
-        if (score >= 3) return { label: 'Equal Fit — MongoDB or Relational', class: 'equal', barClass: 'score-equal', emoji: '' };
-        return { label: 'Weak Fit — Consider Relational', class: 'weak', barClass: 'score-weak', emoji: '' };
+        if (score >= 7.5) return { label: 'Strong Fit — Document Database', class: 'strong', barClass: 'score-strong', emoji: '' };
+        if (score >= 6) return { label: 'Good Fit — Document Database', class: 'good', barClass: 'score-good', emoji: '' };
+        if (score >= 3) return { label: 'Equal Fit — Evaluate Both', class: 'equal', barClass: 'score-equal', emoji: '' };
+        return { label: 'Stronger Fit — Relational Database', class: 'weak', barClass: 'score-weak', emoji: '' };
     }
 
     function getRecommendation(tier, score) {
         if (tier.class === 'strong') {
-            return 'MongoDB is an excellent choice for this project. The requirements align strongly with MongoDB\'s document model, flexible schema, and platform capabilities.';
+            return 'Your requirements align well with a document database approach. The workload characteristics — flexibility, iteration speed, and platform consolidation — favour this model over a traditional relational design.';
         } else if (tier.class === 'good') {
-            return 'MongoDB is a solid choice. Most requirements align well with MongoDB\'s strengths. Review any weak-fit signals to ensure they are manageable.';
+            return 'Most of your requirements point toward a document database, though some aspects may still suit relational patterns. Review the weak-fit signals below to decide how to address them in your architecture.';
         } else if (tier.class === 'equal') {
-            return 'Both MongoDB and a relational database could work here. Consider which team has more expertise, and weigh the specific strong/weak signals in the breakdown below.';
+            return 'Your project has characteristics that suit both approaches. A relational database offers mature tooling for structured, join-heavy workloads; a document database offers flexibility and speed of iteration. Team expertise and your specific data access patterns should guide the decision.';
         } else {
-            return 'A relational database may be a better fit for this use case. The requirements lean toward structured, transactional, or analytics-heavy patterns where relational databases excel.';
+            return 'Your requirements lean toward patterns where relational databases have a natural advantage — structured schemas, complex cross-entity queries, and transactional consistency across many tables. This is a strength of relational, not a weakness of document databases.';
         }
     }
 
     function getSummary(tier, score) {
         if (tier.class === 'strong') {
-            return `<strong>Why MongoDB is a strong fit (${score}/10)</strong><br><br>` +
-                'MongoDB\'s document model is purpose-built for the kind of workload your project demands. Its flexible schema allows your teams to iterate rapidly without waiting for costly database migrations or DBA approvals — every schema change ships with your code, not against it. ' +
-                'Documents naturally map to how your application thinks about data: as rich, nested objects rather than rows scattered across dozens of tables joined at query time. This means fewer round trips, faster reads, and simpler application code.<br><br>' +
-                'MongoDB Atlas extends this further as a unified developer data platform — native full-text search, vector search for AI/RAG workloads, real-time change streams, time-series collections, and event-driven triggers all run on the same platform with no third-party tools to bolt on. ' +
-                'It runs consistently across AWS, Azure, GCP, and on-prem, giving you cloud portability without rewriting a single line of code. ' +
-                'For projects that need speed of delivery, operational agility, and a modern data architecture, MongoDB eliminates the friction that traditional relational databases impose.';
+            return `<strong>Strong document database fit (${score}/10)</strong><br><br>` +
+                'Your project\'s workload characteristics — flexible schemas, rapid iteration, nested or polymorphic data, and real-time operational needs — align strongly with a document database model. ' +
+                'In this kind of architecture, documents map naturally to how the application thinks about data: as rich, nested objects rather than rows distributed across many tables joined at query time. This typically means fewer round trips, simpler application code, and faster development cycles.<br><br>' +
+                'A relational database could still serve parts of this workload, but you would likely end up working around its constraints — adding JSONB columns, caching layers, or denormalised views to achieve the flexibility and performance the project demands. ' +
+                'The document model gives you that flexibility natively, and a platform like MongoDB Atlas adds search, vector search, change streams, and time-series support without bolting on separate tools.<br><br>' +
+                '<strong>Where relational still has an edge:</strong> If any part of your system requires complex cross-entity reporting, regulatory audit trails with strict referential integrity, or heavy ad-hoc analytical querying, consider whether a relational store should handle that specific slice — even within a predominantly document-oriented architecture.';
         } else if (tier.class === 'good') {
-            return `<strong>Why MongoDB is a good fit (${score}/10)</strong><br><br>` +
-                'Your project aligns well with MongoDB\'s core strengths. The document model offers a natural way to represent your data without the overhead of complex joins and rigid schemas. ' +
-                'MongoDB\'s flexible schema means your developers can evolve the data model as requirements change — no migration scripts, no downtime, no DBA bottlenecks.<br><br>' +
-                'MongoDB Atlas provides built-in capabilities like full-text search, vector search, change streams, and time-series support that reduce your need for additional infrastructure. ' +
-                'While some aspects of your project may still benefit from relational patterns, MongoDB can handle these through its multi-document ACID transactions and aggregation pipeline. ' +
-                'Review the weak-fit signals in the breakdown above to ensure those areas are addressed in your architecture.';
+            return `<strong>Good document database fit (${score}/10)</strong><br><br>` +
+                'Most of your requirements point toward a document database — flexible schemas, evolving data models, and operational agility are core strengths of this approach. ' +
+                'Your developers can evolve the data model as requirements change without migration scripts or DBA bottlenecks, and the document structure keeps related data together for fast reads.<br><br>' +
+                'That said, some of your selections suggest areas where relational patterns may still add value. Multi-document ACID transactions and aggregation pipelines can bridge many of these gaps, but it\'s worth evaluating whether specific components — particularly those involving complex cross-entity joins or analytical workloads — might be better served by a relational database alongside the document store.<br><br>' +
+                '<strong>Where relational still has an edge:</strong> Mature tooling for complex reporting, well-established ORM ecosystems, and decades of optimisation for normalised, join-heavy query patterns. Review the weak-fit signals in the breakdown to see if any of these apply to your project.';
         } else if (tier.class === 'equal') {
-            return `<strong>Consider both options carefully (${score}/10)</strong><br><br>` +
-                'Your project has a mix of characteristics that could be served by either MongoDB or a relational database. ' +
-                'MongoDB excels at flexible schemas, rapid iteration, document-oriented data, real-time operations, and platform consolidation — if these matter to your roadmap, MongoDB offers a strong foundation.<br><br>' +
-                'On the other hand, if your workload is heavily relational with complex cross-entity joins, analytical querying by business users, or deep stored procedure logic, a relational database may offer more mature tooling for those specific patterns. ' +
-                'Consider running a proof-of-concept with MongoDB to evaluate how well the document model maps to your domain before committing.';
+            return `<strong>Consider both approaches carefully (${score}/10)</strong><br><br>` +
+                'Your project sits in the middle of the spectrum — it has genuine characteristics that suit both document and relational databases.<br><br>' +
+                '<strong>Document database strengths for your case:</strong> Flexible schemas, rapid iteration, document-oriented data, real-time operations, and platform consolidation. If your roadmap prioritises speed of delivery and schema agility, this model reduces friction.<br><br>' +
+                '<strong>Relational database strengths for your case:</strong> Complex cross-entity joins, ad-hoc analytical querying, stored procedure logic, and strict referential integrity. If your workload is heavily join-dependent or requires mature BI/reporting tooling, relational databases have a natural advantage here.<br><br>' +
+                'Consider running a proof-of-concept with both approaches on a representative slice of your data to see which model maps more naturally to your domain and access patterns. Team expertise should also weigh heavily in this decision.';
         } else {
-            return `<strong>Relational may be the better choice (${score}/10)</strong><br><br>` +
-                'Your project\'s requirements lean heavily toward patterns where relational databases have a natural advantage: complex entity relationships, cross-table analytical queries, stored procedure-driven business logic, or ERP-style deeply normalized data models.<br><br>' +
-                'That said, MongoDB could still play a supporting role in your architecture — for example, as an operational data layer for fast reads, a caching tier, or a document store for specific microservices that don\'t share the relational constraints. ' +
-                'Consider whether parts of your system could benefit from MongoDB even if the core transactional workload stays relational.';
+            return `<strong>Relational database is likely the stronger fit (${score}/10)</strong><br><br>` +
+                'Your project\'s requirements lean toward patterns where relational databases excel: complex entity relationships, cross-table analytical queries, strict referential integrity, and structured, stable schemas. These are genuine strengths of relational systems — not limitations of document databases, but areas where decades of relational optimisation pay off.<br><br>' +
+                '<strong>Where relational works well for you:</strong> Normalised data models with complex joins, BI and reporting workloads, stored procedure logic, regulatory audit trails, and ERP-style transactional processing. If these are your primary access patterns, a relational database gives you the most mature tooling and ecosystem.<br><br>' +
+                '<strong>Where a document database might still help:</strong> Even in a relational-first architecture, a document store can complement specific use cases — an operational data layer for low-latency reads, a flexible store for a microservice that doesn\'t share the relational constraints, or a cache-replacement layer. Consider whether any part of your system would benefit from this hybrid approach.';
         }
     }
 
@@ -833,12 +832,12 @@
         );
 
         if (matchedFeatures.length === 0) {
-            return '<strong>MongoDB Atlas Platform Capabilities</strong><br><br>' +
-                'MongoDB Atlas is a unified developer data platform offering database, search, vector search, streaming, and serverless functions — all managed as a single service across any major cloud or on-prem.';
+            return '<strong>Relevant Platform Capabilities</strong><br><br>' +
+                'If you choose a document database approach, MongoDB Atlas offers a unified platform covering database, search, vector search, streaming, and serverless functions — managed as a single service across major clouds and on-prem.';
         }
 
-        let html = '<strong>MongoDB Atlas Features That Support Your Score</strong><br><br>' +
-            'Based on your selections, these MongoDB Atlas capabilities are most relevant to your project:<br><br>';
+        let html = '<strong>Relevant Platform Capabilities</strong><br><br>' +
+            'Based on your selections, these capabilities are most relevant if you go with a document database approach:<br><br>';
 
         matchedFeatures.forEach(f => {
             html += `<div style="margin-bottom: 14px;">` +
@@ -958,7 +957,7 @@
 
         let html = `
             <div class="scorecard">
-                <div class="score-header">MongoDB Fit Score</div>
+                <div class="score-header">Database Fit Score</div>
                 <div class="score-bar-container">
                     <div class="score-bar ${tier.barClass}" style="width: 0%" id="score-bar">
                         ${score} / 10
@@ -1030,7 +1029,7 @@
     }
 
     function start() {
-        addMessage("Welcome! I'll help you evaluate whether <strong>MongoDB</strong> is the right database for your project. I'll ask you a series of questions and calculate a fit score from <strong>0 to 10</strong>.<br><br><strong>Score Guide:</strong><br>• 7.5 – 10: Strong fit for MongoDB<br>• 6 – 7.5: Good fit<br>• 3 – 5.5: Equal fit (MongoDB or relational)<br>• 0 – 2.5: Weak fit — consider relational", 'bot');
+        addMessage("Welcome! I'll help you evaluate whether a <strong>document database</strong> or a <strong>relational database</strong> is the better fit for your project. I'll ask you a series of questions and calculate a fit score from <strong>0 to 10</strong>.<br><br><strong>Score Guide:</strong><br>• 7.5 – 10: Strong fit for a document database<br>• 6 – 7.5: Good fit for a document database<br>• 3 – 5.5: Could go either way — evaluate both<br>• 0 – 2.5: Relational database is likely the stronger fit", 'bot');
         setTimeout(() => showQuestion('q1'), 600);
     }
 
