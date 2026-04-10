@@ -349,6 +349,9 @@
             text: "What's driving the refresh? (Select all that apply)",
             type: 'multi',
             options: [
+                { id: 'eol_legacy', label: 'End-of-life / end-of-support for legacy systems', score: 1.2 },
+                { id: 'slow_perf', label: 'Slow application performance causing business impact', score: 1.5 },
+                { id: 'modernise_arch', label: 'Modernising architecture (e.g., moving to cloud-native, microservices)', score: 1.5 },
                 { id: 'rigid_schema', label: 'Rigid schema changes slowing development', score: 1.5 },
                 { id: 'db_bottleneck', label: 'Database bottlenecks delaying delivery', score: 1.5 },
                 { id: 'always_on', label: 'Need for near always-on availability', score: 1.2 },
@@ -368,11 +371,12 @@
             options: [
                 { id: 'digital_ux', label: 'Better UI / digital experience for end customers', score: 1.2 },
                 { id: 'fast_response', label: 'Faster response times / low latency', score: 1.0 },
-                { id: 'decouple_logic', label: 'Decoupling business logic from database', score: 1.0 },
-                { id: 'api_microservices', label: 'API-first / microservices architecture', score: 1.0 },
-                { id: 'geo_distributed', label: 'Geo-distributed / multi-region availability', score: 1.0 },
-                { id: 'erp_complex', label: 'ERP system with complex nested entity relationships (e.g., SAP, Oracle EBS style workloads)', score: -2.0 },
-                { id: 'heavy_transactions', label: 'Heavy multi-table transactional workflows across deeply related entities', score: -1.0 },
+                { id: 'cost_optimisation', label: 'Reducing infrastructure or licensing costs', score: 1.0 },
+                { id: 'decouple_logic', label: 'Enabling teams to ship independently without cross-team database coordination', score: 1.0 },
+                { id: 'api_microservices', label: 'Exposing services via APIs / enabling a composable architecture', score: 1.0 },
+                { id: 'geo_distributed', label: 'Serving customers across multiple regions with local performance', score: 1.0 },
+                { id: 'erp_complex', label: 'Managing deeply interconnected business processes (e.g., ERP, supply chain, order-to-cash)', score: -2.0 },
+                { id: 'heavy_transactions', label: 'Ensuring atomic consistency across many related business entities in a single operation', score: -1.0 },
                 { id: 'relational_audit', label: 'Regulatory requirement for strict relational audit trails', score: -0.5 }
             ],
             weight: 1.0,
@@ -409,6 +413,7 @@
             type: 'multi',
             options: [
                 { id: 'monolith_to_ddd', label: 'Moving from monolith to domain-driven / microservices architecture', score: 1.5 },
+                { id: 'modular_monolith', label: 'Moving to a modular monolith with clearer domain boundaries', score: 1.0 },
                 { id: 'add_realtime', label: 'Adding real-time capabilities that legacy system can\'t support', score: 1.2 },
                 { id: 'offload_layer', label: 'Building an operational data layer to offload legacy backends', score: 1.5 },
                 { id: 'integrate_ai', label: 'Integrating AI / agentic capabilities into existing workflows', score: 1.5 },
@@ -433,8 +438,10 @@
                 { id: 'runtime_aggregations', label: 'Heavy runtime computations / aggregations on operational data', score: 1.2 },
                 { id: 'schema_versioning', label: 'Schema versioning and lifecycle management is important — controlled-yet-flexible schema with tools like Liquibase (Spring Boot)', score: 1.2 },
                 { id: 'odl_heavy_reads', label: 'Building an operational data layer to offload heavy reads from core systems — flexible schema allows consolidating data from multiple core systems into a single store', score: 1.8 },
-                { id: 'realtime_compute', label: 'Service primarily caters to real-time pre-programmed computations (strong document DB fit)', score: 1.5 },
-                { id: 'human_analytical', label: 'Service primarily caters to ad-hoc analytical querying by humans (better suited to relational)', score: -1.5 },
+                { id: 'realtime_compute', label: 'Service primarily caters to real-time pre-programmed computations', score: 1.5 },
+                { id: 'highly_relational', label: 'Data is highly relational with many cross-entity joins required at query time', score: -1.5 },
+                { id: 'fixed_schema', label: 'Schema is slow-changing or fixed — rarely evolves after initial design', score: -1.0 },
+                { id: 'human_analytical', label: 'Service primarily caters to ad-hoc analytical querying by humans', score: -1.5 },
                 { id: 'analytics_primary', label: 'Primary purpose is analytics / BI for internal analysts and data teams', score: -2.0 }
             ],
             weight: 1.0,
@@ -450,6 +457,8 @@
                 { id: 'flatten_xml', label: 'Flattening XML or nested data structures into relational tables for querying', score: 1.5 },
                 { id: 'computed_fields', label: 'Pre-computing and storing derived / aggregated fields to avoid expensive runtime calculations', score: 1.2 },
                 { id: 'caching_layer', label: 'Using a caching layer (e.g., Redis, Memcached) in front of the database for read performance', score: 1.5 },
+                { id: 'kv_offload', label: 'Using a key-value database to offload simple lookups from the primary database', score: 1.5 },
+                { id: 'read_views', label: 'Creating read-optimised views or materialised tables to avoid joins at query time', score: 1.5 },
                 { id: 'search_engine_bolt', label: 'Running a separate search engine (e.g., Elasticsearch, Solr) alongside the database for full-text / natural-language search', score: 1.5 },
                 { id: 'none_denorm', label: 'None of the above', score: 0 }
             ],
@@ -465,9 +474,10 @@
                 { id: 'reduce_devops', label: 'Constant ask from developers to reduce dependency on DevOps / DBA teams for data operations', score: 1.5 },
                 { id: 'move_faster', label: 'Business asks to move faster even when you\'re already moving fast', score: 1.2 },
                 { id: 'no_bolt_on', label: 'Want to avoid bolting on third-party tools for every database feature (e.g., separate tools for search, caching, streaming, etc.)', score: 1.5 },
-                { id: 'logic_app_level', label: 'Want to control business logic at the application level (great document DB fit)', score: 1.5 },
-                { id: 'logic_db_level', label: 'Want to continue using stored procedures / database-level business logic (relational may be better)', score: -1.5 },
-                { id: 'cloud_portability', label: 'Important that code runs the same on any cloud (AWS, Azure, GCP) and on-prem / private cloud if business continuity strategy changes', score: 1.5 }
+                { id: 'logic_app_level', label: 'Want to control business logic at the application level', score: 1.5 },
+                { id: 'logic_db_level', label: 'Want to continue using stored procedures / database-level business logic', score: -1.5 },
+                { id: 'cloud_portability', label: 'Important that code runs the same on any cloud (AWS, Azure, GCP) and on-prem / private cloud if business continuity strategy changes', score: 1.5 },
+                { id: 'low_change_rate', label: 'Application has a low change rate — infrequent releases and stable requirements', score: -1.0 }
             ],
             weight: 1.0,
             category: 'Developer Velocity',
@@ -802,17 +812,17 @@
                 desc: 'A powerful server-side computation framework — group, transform, join, bucket, and reshape data in multi-stage pipelines. Runs computations where the data lives, avoiding costly round trips and application-side processing.'
             },
             {
-                triggers: ['reduce_devops', 'no_bolt_on', 'move_faster', 'caching_layer', 'search_engine_bolt'],
+                triggers: ['reduce_devops', 'no_bolt_on', 'move_faster', 'caching_layer', 'search_engine_bolt', 'kv_offload', 'cost_optimisation'],
                 feature: 'Atlas Developer Data Platform',
                 desc: 'A fully managed platform that consolidates database, search, vector, streaming, and triggers into a single service. Reduces operational overhead, eliminates third-party tool sprawl, and lets developers focus on building instead of managing infrastructure.'
             },
             {
-                triggers: ['operational_layer', 'offload_layer', 'odl_heavy_reads', 'new_shield'],
+                triggers: ['operational_layer', 'offload_layer', 'odl_heavy_reads', 'new_shield', 'read_views', 'slow_perf'],
                 feature: 'Operational Data Layer Pattern',
                 desc: 'MongoDB excels as a fast read/write layer that shields legacy backends from heavy traffic. Its flexible schema lets you aggregate data from multiple core systems into a single store, serving low-latency queries without touching origin systems.'
             },
             {
-                triggers: ['decouple_logic', 'logic_app_level', 'api_microservices', 'monolith_to_ddd'],
+                triggers: ['decouple_logic', 'logic_app_level', 'api_microservices', 'monolith_to_ddd', 'modular_monolith', 'modernise_arch'],
                 feature: 'Microservices & Application-Tier Architecture',
                 desc: 'MongoDB\'s document-per-service model naturally fits microservices. Each service owns its data, business logic stays in the application tier, and the flexible schema evolves independently per service boundary without cross-team migration coordination.'
             }
